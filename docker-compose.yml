@@ -1,0 +1,246 @@
+version: '3'
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.3.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.3.0
+    container_name: kafka
+    ports:
+    # To learn about configuring Kafka for access across networks see
+    # https://www.confluent.io/blog/kafka-client-cannot-connect-to-broker-on-aws-on-docker-etc/
+      - "9092:9092"
+      - "29092:29092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui
+    container_name: kafka-ui
+    ports:
+      - "8080:8080"
+    restart: always
+    depends_on:
+      - kafka
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+  # redis
+  redis:
+    image: redis:6.2-alpine
+    container_name: redis
+    restart: always
+    ports:
+      - '6379:6379'
+    # command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+    # volumes: 
+    #   - cache:/data
+  
+  #auth-mongodb database
+  auth-mongodb:
+    image: mongo:latest
+    container_name: auth-mongodb
+    ports:
+      - 27017:27017
+    environment:
+      - MONGO_INITDB_DATABASE=test
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=root
+    command: [--auth]
+    volumes:
+      # named volumes
+      - mongodb:/data/db
+      - mongoconfig:/data/configdb
+      - "$PWD/mongo-entrypoint/:/docker-entrypoint-initdb.d/"
+  
+  # identity-mongodb database
+  identity-mongodb:
+    image: mongo:latest
+    container_name: identity-mongodb
+    ports:
+      - 27018:27017
+    environment:
+      - MONGO_INITDB_DATABASE=user
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=root
+    command: [--auth]
+    volumes:
+      # named volumes
+      - mongodb-identity:/data/db
+      - mongoconfig-identity:/data/configdb
+      - "$PWD/identity/mongo-entrypoint/:/docker-entrypoint-initdb.d/"
+
+  # identity-mongodb database
+  notification-mongodb:
+    image: mongo:latest
+    container_name: notification-mongodb
+    ports:
+      - 27019:27017
+    environment:
+      - MONGO_INITDB_DATABASE=user
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=root
+    command: [--auth]
+    volumes:
+      # named volumes
+      - mongodb-notification:/data/db
+      - mongoconfig-notification:/data/configdb
+      - "$PWD/notification/mongo-entrypoint/:/docker-entrypoint-initdb.d/"
+  
+  # alert manager
+  alertmanager:
+    container_name: alertmanager
+    hostname: alertmanager
+    image: prom/alertmanager
+    volumes:
+      - ./alertmanager.conf:/etc/alertmanager/alertmanager.conf
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.conf'
+    ports:
+      - 9093:9093
+
+  # prometheus
+  prometheus:
+    image: prom/prometheus:v2.20.1
+    container_name: prometheus
+    hostname: prometheus
+    restart: always
+    links:
+      - alertmanager:alertmanager
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    volumes:
+      - ${PWD}/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ${PWD}/alert_rules.yml:/etc/prometheus/alert_rules.yml
+      - prometheus_data:/prometheus
+    ports:
+      - 9090:9090
+  
+  # grafana 
+  grafana:
+    image: grafana/grafana:7.1.5
+    container_name: grafana
+    restart: always
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ${PWD}/grafana_datasources.yml:/etc/grafana/provisioning/datasources/all.yaml
+      - ${PWD}/grafana_config.ini:/etc/grafana/config.ini
+    environment:
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    ports:
+      - 3004:3000
+
+  #api-gateway-service
+  api-gateway:
+    extends:
+      file: docker-compose.base.yml
+      service: services-base
+    command: npx nx run api-gateway-service:serve
+    depends_on:
+      - kafka
+    env_file:
+      - apps/api-gateway-service/.env
+      - .env
+    environment:
+      - PORT=5000
+      - NODE_ENV=${NODE_ENV}
+      - BROKER=${BROKER}
+      - JWT_SECRET=${JWT_SECRET}
+    ports:
+      - 5000:5000
+  
+  #auth-service
+  auth:
+    extends:
+      file: docker-compose.base.yml
+      service: services-base
+    command: npx nx run auth-service:serve
+    depends_on:
+      - kafka
+      - auth-mongodb
+    env_file:
+      - apps/auth-service/.env
+      - .env
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - BROKER=${BROKER}
+      - AUTH_MONGO_URL=${AUTH_MONGO_URL}
+      - JWT_SECRET=${JWT_SECRET}
+    ports:
+      - 5004:5004
+  
+  #identity-service
+  identity:
+    extends:
+      file: docker-compose.base.yml
+      service: services-base
+    command: npx nx run identity-service:serve
+    depends_on:
+      - kafka
+      - identity-mongodb
+    env_file:
+      - apps/identity-service/.env
+      - .env
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - BROKER=${BROKER}
+      - IDENTITY_MONGO_URL=${IDENTITY_MONGO_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+
+  #identity-service
+  notification:
+    extends:
+      file: docker-compose.base.yml
+      service: services-base
+    command: npx nx run notification-service:serve
+    depends_on:
+      - kafka
+      - notification-mongodb
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=${NODE_ENV}
+      - BROKER=${BROKER}
+      - NOTIFICATION_MONGO_URL=${NOTIFICATION_MONGO_URL}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    ports:
+      - 5005:5005
+
+volumes:
+  # default dir on Ubuntu: /var/lib/docker/volumes
+  mongodb:
+  mongoconfig:
+  mongodb-identity:
+  mongoconfig-identity:
+  mongodb-notification:
+  mongoconfig-notification:
+  prometheus_data: {}
+  grafana_data: {}
+  # cache:
+  #   driver: local

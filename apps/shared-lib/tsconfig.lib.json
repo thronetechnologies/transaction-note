@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../dist/out-tsc",
+    "declaration": true,
+    "types": ["node"],
+    "target": "es6"
+  },
+  "include": [
+    "src/**/*.ts",
+    "../api-gateway-service/src/app/dto/signup.dto.ts",
+    "../api-gateway-service/src/app/dto/signup-request.dto.ts",
+    "../api-gateway-service/src/app/dto/authorized-signup-request.dto.ts"
+  ],
+  "exclude": ["jest.config.ts", "src/**/*.spec.ts", "src/**/*.test.ts"]
+}

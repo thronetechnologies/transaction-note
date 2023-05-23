@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+      body {
+        background-color: #183247;
+        color: #fff;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+      .user-name {
+        color: red;
+      }
+    </style>
+</head>
+<body>
+  {{>header}}
+    <h3 class="user-name">Hi {{firstname}} {{lastname}}</h3>
+    <br><br>
+    <p>There was a sign into your account </p>
+</body>
+</html>

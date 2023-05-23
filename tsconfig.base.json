@@ -14,7 +14,13 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@api-gateway/*": ["apps/api-gateway-service/src/*"],
+      "@auth/*": ["apps/auth-service/src/*"],
+      "@identity/*": ["apps/identity-service/src/*"],
+      "@notification/*": ["apps/notification-service/src/*"],
+      "@shared-lib/*": ["apps/shared-lib/src/*"]
+    }
   },
   "exclude": ["node_modules", "tmp"]
 }
