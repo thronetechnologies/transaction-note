@@ -30,10 +30,13 @@ node_modules
 /coverage
 /libpeerconnection.log
 npm-debug.log
+templates
+grafana
+values.yaml
 yarn-error.log
 testem.log
 /typings
-.env
+*.env
 
 # System Files
 .DS_Store
