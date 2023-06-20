@@ -1,0 +1,378 @@
+---
+# Source: service-chart/templates/api-gateway-service.yaml
+# ConfigMap
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: transfernow-transfernowconfigmap
+  namespace: default
+data:
+  # broker: kafka:9092
+  node-env: development
+  # auth-mongo-url: mongodb://root:root@auth-mongodb:27017/
+  # identity-mongo-url: mongodb://root:root@identity-mongodb:27017/
+  # notification-mongo-url: mongodb://root:root@notification-mongodb:27017/
+  # redis-host: redis
+  # mailtrap-host: sandbox.smtp.mailtrap.io
+---
+# Source: service-chart/templates/api-gateway-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: transfernow-api-gateway-service
+  namespace: default
+spec:
+  selector:
+    app: api-gateway
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
+---
+# Source: service-chart/templates/auth-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: transfernow-auth-service
+  namespace: default
+spec:
+  selector:
+    app: auth
+  ports:
+    - protocol: TCP
+      port: 5004
+      targetPort: 5004
+---
+# Source: service-chart/templates/identity-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: transfernow-identity-service
+  namespace: default
+spec:
+  selector:
+    app: identity
+  ports:
+    - protocol: TCP
+      port: 5002
+      targetPort: 5002
+---
+# Source: service-chart/templates/notification-service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: transfernow-notification-service
+  namespace: default
+spec:
+  selector:
+    app: notification
+  ports:
+    - protocol: TCP
+      port: 5005
+      targetPort: 5005
+---
+# Source: service-chart/templates/api-gateway-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transfernow-api-gateway-deployment
+  namespace: default
+  labels:
+    app: api-gateway
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+    spec:
+      serviceAccountName: vault
+      volumes:
+        - name: api-gateway-config
+          configMap:
+            name: transfernow-transfernowconfigmap
+      imagePullSecrets:
+        - name: myregistrykey
+      containers:
+        - name: api-gateway
+          image: neltoby/microservice:v1
+          ports:
+            - containerPort: 5000
+          command: ['/bin/sh', '-c']
+          args: ['npx nx run api-gateway-service:serve']
+          env:
+            - name: PORT
+              value: '5000'
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: transfernow-transfernowconfigmap
+                  key: node-env
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-service
+                  key: JWT_SECRET
+            - name: BROKER
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-service
+                  key: BROKER
+---
+# Source: service-chart/templates/auth-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transfernow-auth-deployment
+  namespace: default
+  labels:
+    app: auth
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: auth
+  template:
+    metadata:
+      labels:
+        app: auth
+    spec:
+      serviceAccountName: vault
+      volumes:
+        - name: auth-config
+          configMap:
+            name: transfernow-transfernowconfigmap
+      imagePullSecrets:
+        - name: myregistrykey
+      containers:
+        - name: auth
+          image: neltoby/microservice:v1
+          ports:
+            - containerPort: 5004
+          command: ['/bin/sh', '-c']
+          args: ['npx nx run auth-service:serve']
+          env:
+            - name: PORT
+              value: '5004'
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: transfernow-transfernowconfigmap
+                  key: node-env
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-service
+                  key: JWT_SECRET
+            - name: BROKER
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-service
+                  key: BROKER
+            - name: AUTH_MONGO_URL
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-service
+                  key: AUTH_MONGO_URL
+---
+# Source: service-chart/templates/identity-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transfernow-identity-deployment
+  namespace: default
+  labels:
+    app: identity
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: identity
+  template:
+    metadata:
+      labels:
+        app: identity
+    spec:
+      serviceAccountName: vault
+      volumes:
+        - name: identity-config
+          configMap:
+            name: transfernow-transfernowconfigmap
+      imagePullSecrets:
+        - name: myregistrykey
+      containers:
+        - name: identity
+          image: neltoby/microservice:v1
+          ports:
+            - containerPort: 5002
+          command: ['/bin/sh', '-c']
+          args: ['npx nx run identity-service:serve']
+          env:
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: transfernow-transfernowconfigmap
+                  key: node-env
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-service
+                  key: JWT_SECRET
+            - name: BROKER
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-service
+                  key: BROKER
+            - name: IDENTITY_MONGO_URL
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-service
+                  key: IDENTITY_MONGO_URL
+            - name: REDIS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-service
+                  key: REDIS_HOST
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-service
+                  key: REDIS_PASSWORD
+            - name: REDIS_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-service
+                  key: REDIS_PORT
+---
+# Source: service-chart/templates/notification-service.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: transfernow-notification-deployment
+  namespace: default
+  labels:
+    app: notification
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app: notification
+  template:
+    metadata:
+      labels:
+        app: notification
+    spec:
+      serviceAccountName: vault
+      volumes:
+        - name: notification-config
+          configMap:
+            name: transfernow-transfernowconfigmap
+      imagePullSecrets:
+        - name: myregistrykey
+      containers:
+        - name: notification
+          image: neltoby/microservice:v1
+          ports:
+            - containerPort: 5005
+          command: ['/bin/sh', '-c']
+          args: ['npx nx run notification-service:serve']
+          env:
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: transfernow-transfernowconfigmap
+                  key: node-env
+            - name: BROKER
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-service
+                  key: BROKER
+            - name: IDENTITY_MONGO_URL
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-service
+                  key: IDENTITY_MONGO_URL
+            - name: REDIS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-service
+                  key: REDIS_HOST
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-service
+                  key: REDIS_PASSWORD
+            - name: REDIS_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-service
+                  key: REDIS_PORT
+            - name: MAILTRAP_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-service
+                  key: MAILTRAP_HOST
+            - name: MAILTRAP_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-service
+                  key: MAILTRAP_PORT
+            - name: MAILTRAP_AUTH_USER
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-service
+                  key: MAILTRAP_AUTH_USER
+            - name: MAILTRAP_AUTH_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-service
+                  key: MAILTRAP_AUTH_PASS
+---
+# Source: service-chart/templates/api-gateway-service.yaml
+# apiVersion: v1
+# kind: Namespace
+# metadata:
+#
+#   name: transfernow-dev
+#
+# ---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: transfernow-api-gateway-ingress
+  namespace: default
+spec:
+  rules:
+    - host: transaction-note.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: api-gateway-service
+                port:
+                  number: 5000

@@ -1,7 +1,7 @@
 global:
   datacenter: vault-kubernetes-tutorial
 
-client:
+ui_config:
   enabled: true
 
 server:

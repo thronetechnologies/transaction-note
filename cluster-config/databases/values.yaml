@@ -1,0 +1,90 @@
+services:
+  development: true
+  namespace: transfernow
+  externalSecret:
+    name: transfernow-secret
+    backendType: vault
+    secretTarget: secrets-service
+    vault:
+      path: secret/transfernow/services
+      role: transfernow
+      mountPoint: kubernetes
+    secret:
+      broker: broker
+      auth_mongo_url: authmongourl
+      identity_mongo_url: identitymongourl
+      notification_mongo_url: notificationmongourl
+      jwt_secret: jwtsecret
+      redis_password: redispassword
+      redis_host: redishost
+      redis_port: redisport
+      mailtrap_host: mailtraphost
+      mailtrap_port: mailtrapport
+      mailtrap_auth_user: mailtrapauthuser
+      mailtrap_auth_pass: mailtrapauthpass
+      authdb_user: authdbuser
+      authdb_password: authdbpassword
+      identitydb_user: identitydbuser
+      identitydb_password: identitydbpassword
+      notificationdb_user: notificationdbuser
+      notificationdb_password: notificationdbpassword
+
+  # auth microservice defination
+  auth:
+    # auth database statefulset helm values
+    database:
+      name: auth-mongo-db
+      replicas: 1
+      containerName: auth-mongo-db
+      containerPort: '27017'
+      image: mongo
+      volumeMountName: auth-mongodb-persistent-storage
+      volumeMountPath: /data/db
+      volumeClaimName: auth-data-pvc
+      service:
+        name: auth-mongodb-service
+        clusterIP: None
+        port: '27017'
+      secrets:
+        mongo_initdb_root_username: authdb_user
+        mongo_initdb_root_password: authdb_password
+
+  # identity microservice definations
+  identity:
+    # identity database statefulset helm values
+    database:
+      name: iden-mongo-db
+      replicas: 1
+      containerName: identity-mongo-db
+      containerPort: '27017'
+      image: mongo
+      volumeMountName: identity-mongodb-persistent-storage
+      volumeMountPath: /data/db
+      volumeClaimName: identity-data-pvc
+      service:
+        name: identity-mongodb-service
+        clusterIP: None
+        port: '27017'
+      secrets:
+        mongo_initdb_root_username: identitydb_user
+        mongo_initdb_root_password: identitydb_password
+
+  # notification microservice definitions
+  notification:
+    # notification database statefulset helm values
+    database:
+      name: notif-mongo-db
+      replicas: 1
+      containerName: notification-mongo-db
+      containerPort: '27017'
+      image: mongo
+      volumeMountName: notification-mongodb-persistent-storage
+      volumeMountPath: /data/db
+      volumeClaimName: notification-data-pvc
+      service:
+        name: notification-mongodb-service
+        clusterIP: None
+        port: '27017'
+      secrets:
+        mongo_initdb_root_username: notificationdb_user
+        mongo_initdb_root_password: notificationdb_password

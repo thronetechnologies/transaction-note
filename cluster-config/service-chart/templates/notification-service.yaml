@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Service
+metadata:
+{{ include "service-chart.v0.metadata" (list $ .Values.services.notification.service) | indent 2}}
+spec:
+  selector:
+{{ include "service-chart.v0.selector" .Values.services.notification | indent 4 }}
+  ports:
+    - protocol: TCP
+      {{- with .Values.services.notification }}
+      port: {{ .service.port}}
+      targetPort: {{ .deployment.containerPort }}
+      {{- end }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+{{ include "service-chart.v0.metadata" (list $ .Values.services.notification.deployment) | indent 2}}
+  labels:
+{{ include "service-chart.v0.selector" .Values.services.notification | indent 4 }}
+spec:
+  replicas: {{ .Values.services.notification.deployment.replicas }}
+{{ include "service-chart.v0.strategy" . | indent 2}}
+  selector:
+    matchLabels:
+{{ include "service-chart.v0.selector" .Values.services.notification | indent 6 }}
+  template:
+    metadata:
+      labels:
+{{ include "service-chart.v0.selector" .Values.services.notification | indent 8 }}
+    spec:
+      serviceAccountName: vault
+      volumes:
+        - name: notification-config
+          configMap:
+            name: {{ cat $.Release.Name .Values.services.apigateway.configmap.name | replace " " "-" }}
+{{ include "service-chart.v0.imagePullSecret" . | indent 6 }}
+      containers:
+        {{- with .Values.services.notification.deployment }}
+        - name: {{ .containerName }}
+          image: {{ $.Values.services.image }}
+          ports:
+            - containerPort: {{ .containerPort }}
+          command: ["/bin/sh", "-c"]
+          args: ["npx nx run notification-service:serve"]
+        {{- end }}
+          env:
+            - name: NODE_ENV
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ cat $.Release.Name .Values.services.apigateway.configmap.name | replace " " "-" }}
+                  key: node-env
+{{- include "service-chart.v0.ext-secrets" (list $ .Values.services.notification) | indent 12 -}}

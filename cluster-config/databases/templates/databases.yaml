@@ -1,0 +1,163 @@
+{{- if .Values.services.development -}}
+# Notification database headless service
+{{- with .Values.services.notification.database }}
+apiVersion: "v1"
+kind: "Service"
+metadata: 
+{{ include "service-chart.v0.servicemetadata" (list $ .service) | indent 2}}
+  labels: 
+{{ include "service-chart.v0.selector" . | indent 4 }}
+spec: 
+  ports: 
+    - name: {{ .name}}
+      port: {{ .service.port}}
+      targetPort: {{ .containerPort}}
+  clusterIP: {{ .service.clusterIP}}
+  selector: 
+    {{ include "service-chart.v0.selector" . | indent 4 }}
+{{- end }}
+---
+# Notification database statefulset
+{{- with .Values.services.notification.database }}
+apiVersion: "apps/v1"
+kind: "StatefulSet"
+metadata: 
+{{ include "service-chart.v0.metadata" (list $ .) | indent 2}}
+spec:
+  serviceName: {{ .service.name }} 
+  replicas: {{ .replicas }}
+  selector: 
+    matchLabels: 
+{{ include "service-chart.v0.selector" . | indent 6 }}
+  template: 
+    metadata: 
+      labels: 
+{{ include "service-chart.v0.selector" . | indent 8 }}
+    spec: 
+      serviceAccountName: vault
+      containers: 
+        - name: {{ .containerName }}
+          image: {{ .image }}
+          imagePullPolicy: "Always"
+          env: 
+{{- include "service-chart.v0.ext-secrets-merge" (list $ .) | indent 12 }}           
+          ports: 
+            - containerPort: {{ .containerPort }}
+              name: {{ .name }}
+          volumeMounts: 
+            - name: {{ .volumeMountName }}
+              mountPath: {{ .volumeMountPath }}              
+      volumes: 
+        - name: {{ .volumeMountName }}
+          persistentVolumeClaim: 
+            claimName: {{ .volumeClaimName }}
+{{- end }}
+---
+# Auth database headless service
+{{- with .Values.services.auth.database }}
+apiVersion: "v1"
+kind: "Service"
+metadata: 
+{{ include "service-chart.v0.servicemetadata" (list $ .service) | indent 2}}
+  labels: 
+{{ include "service-chart.v0.selector" . | indent 4 }}
+spec: 
+  ports: 
+    - name: {{ .name}}
+      port: {{ .service.port}}
+      targetPort: {{ .containerPort}}
+  clusterIP: {{ .service.clusterIP}}
+  selector: 
+    {{ include "service-chart.v0.selector" . | indent 4 }}
+{{- end }}
+---
+# Auth database statefulset
+{{- with .Values.services.auth.database }}
+apiVersion: "apps/v1"
+kind: "StatefulSet"
+metadata: 
+{{ include "service-chart.v0.metadata" (list $ .) | indent 2}}
+spec:
+  serviceName: {{ .service.name }} 
+  replicas: {{ .replicas }}
+  selector: 
+    matchLabels: 
+{{ include "service-chart.v0.selector" . | indent 6 }}
+  template: 
+    metadata: 
+      labels: 
+{{ include "service-chart.v0.selector" . | indent 8 }}
+    spec: 
+      serviceAccountName: vault
+      containers: 
+        - name: {{ .containerName }}
+          image: {{ .image }}
+          imagePullPolicy: "Always"
+          env:
+{{- include "service-chart.v0.ext-secrets-merge" (list $ .) | indent 12 }}              
+          ports: 
+            - containerPort: {{ .containerPort }}
+              name: {{ .name }}
+          volumeMounts: 
+            - name: {{ .volumeMountName }}
+              mountPath: {{ .volumeMountPath }}              
+      volumes: 
+        - name: {{ .volumeMountName }}
+          persistentVolumeClaim: 
+            claimName: {{ .volumeClaimName }}
+{{- end }}
+---
+# Identity database headless service
+{{- with .Values.services.identity.database }}
+apiVersion: "v1"
+kind: "Service"
+metadata: 
+{{ include "service-chart.v0.servicemetadata" (list $ .service) | indent 2}}
+  labels: 
+{{ include "service-chart.v0.selector" . | indent 4 }}
+spec: 
+  ports: 
+    - name: {{ .name}}
+      port: {{ .service.port}}
+      targetPort: {{ .containerPort}}
+  clusterIP: {{ .service.clusterIP}}
+  selector: 
+    {{ include "service-chart.v0.selector" . | indent 4 }}
+{{- end }}
+---
+# Identity database statefulset set
+{{- with .Values.services.identity.database }}
+apiVersion: "apps/v1"
+kind: "StatefulSet"
+metadata: 
+{{ include "service-chart.v0.metadata" (list $ .) | indent 2}}
+spec:
+  serviceName: {{ .service.name }} 
+  replicas: {{ .replicas }}
+  selector: 
+    matchLabels: 
+{{ include "service-chart.v0.selector" . | indent 6 }}
+  template: 
+    metadata: 
+      labels: 
+{{ include "service-chart.v0.selector" . | indent 8 }}
+    spec: 
+      serviceAccountName: vault
+      containers: 
+        - name: {{ .containerName }}
+          image: {{ .image }}
+          imagePullPolicy: "Always"
+          env: 
+{{- include "service-chart.v0.ext-secrets-merge" (list $ .) | indent 12 }}             
+          ports: 
+            - containerPort: {{ .containerPort }}
+              name: {{ .name }}
+          volumeMounts: 
+            - name: {{ .volumeMountName }}
+              mountPath: {{ .volumeMountPath }}              
+      volumes: 
+        - name: {{ .volumeMountName }}
+          persistentVolumeClaim: 
+            claimName: {{ .volumeClaimName }}
+{{- end }}
+{{- end -}}

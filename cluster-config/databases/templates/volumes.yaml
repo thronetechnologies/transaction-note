@@ -1,0 +1,51 @@
+{{- if .Values.services.development -}}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: auth-data-pv
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+  hostPath:
+    path: /service-data-pv/data
+    type: ""
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: auth-storage
+  volumeMode: Filesystem
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: identity-data-pv
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+  hostPath:
+    path: /identity-data-pv/data
+    type: ""
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: identity-storage
+  volumeMode: Filesystem
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: notification-data-pv
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+  hostPath:
+    path: /notification-data-pv/data
+    type: ""
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: notification-storage
+  volumeMode: Filesystem
+{{- end -}}

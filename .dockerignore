@@ -2,5 +2,12 @@
 node_modules
 node_modules/
 
+# umwanted files/folder
+cluster-config
+cluster-config/
+grafana
+dist
+cluster-keys.json
+
 # lock file
 yarn.lock

@@ -1,0 +1,427 @@
+---
+# Source: databases/templates/storages.yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: auth-storage
+provisioner: k8s.io/minikube-hostpath
+reclaimPolicy: Retain 
+volumeBindingMode: Immediate
+---
+# Source: databases/templates/storages.yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: identity-storage
+provisioner: k8s.io/minikube-hostpath
+reclaimPolicy: Retain 
+volumeBindingMode: Immediate
+---
+# Source: databases/templates/storages.yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: notification-storage
+provisioner: k8s.io/minikube-hostpath
+reclaimPolicy: Retain 
+volumeBindingMode: Immediate
+---
+# Source: databases/templates/volumes.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: auth-data-pv
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+  hostPath:
+    path: /service-data-pv/data
+    type: ""
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: auth-storage
+  volumeMode: Filesystem
+---
+# Source: databases/templates/volumes.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: identity-data-pv
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+  hostPath:
+    path: /identity-data-pv/data
+    type: ""
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: identity-storage
+  volumeMode: Filesystem
+---
+# Source: databases/templates/volumes.yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: notification-data-pv
+spec:
+  accessModes:
+  - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+  hostPath:
+    path: /notification-data-pv/data
+    type: ""
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: notification-storage
+  volumeMode: Filesystem
+---
+# Source: databases/templates/volume-claims.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: auth-data-pvc
+  namespace: default
+spec:
+  storageClassName: auth-storage
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+# Source: databases/templates/volume-claims.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: identity-data-pvc
+  namespace: default
+spec:
+  storageClassName: identity-storage
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+# Source: databases/templates/volume-claims.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: notification-data-pvc
+  namespace: default
+spec:
+  storageClassName: notification-storage
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+# Source: databases/templates/databases.yaml
+# Notification database headless service
+apiVersion: "v1"
+kind: "Service"
+metadata: 
+  name: notification-mongodb-service
+  namespace: default
+  labels: 
+    app: notif-mongo-db
+spec: 
+  ports: 
+    - name: notif-mongo-db
+      port: 27017
+      targetPort: 27017
+  clusterIP: None
+  selector: 
+        app: notif-mongo-db
+---
+# Source: databases/templates/databases.yaml
+# Auth database headless service
+apiVersion: "v1"
+kind: "Service"
+metadata: 
+  name: auth-mongodb-service
+  namespace: default
+  labels: 
+    app: auth-mongo-db
+spec: 
+  ports: 
+    - name: auth-mongo-db
+      port: 27017
+      targetPort: 27017
+  clusterIP: None
+  selector: 
+        app: auth-mongo-db
+---
+# Source: databases/templates/databases.yaml
+# Identity database headless service
+apiVersion: "v1"
+kind: "Service"
+metadata: 
+  name: identity-mongodb-service
+  namespace: default
+  labels: 
+    app: iden-mongo-db
+spec: 
+  ports: 
+    - name: iden-mongo-db
+      port: 27017
+      targetPort: 27017
+  clusterIP: None
+  selector: 
+        app: iden-mongo-db
+---
+# Source: databases/templates/databases.yaml
+# Notification database statefulset
+apiVersion: "apps/v1"
+kind: "StatefulSet"
+metadata: 
+  name: databases-notif-mongo-db
+  namespace: default
+spec:
+  serviceName: notification-mongodb-service 
+  replicas: 1
+  selector: 
+    matchLabels: 
+      app: notif-mongo-db
+  template: 
+    metadata: 
+      labels: 
+        app: notif-mongo-db
+    spec: 
+      serviceAccountName: vault
+      containers: 
+        - name: notification-mongo-db
+          image: mongo
+          imagePullPolicy: "Always"
+          env:            
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-service
+                  key: NOTIFICATIONDB_PASSWORD
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-service
+                  key: NOTIFICATIONDB_USER           
+          ports: 
+            - containerPort: 27017
+              name: notif-mongo-db
+          volumeMounts: 
+            - name: notification-mongodb-persistent-storage
+              mountPath: /data/db              
+      volumes: 
+        - name: notification-mongodb-persistent-storage
+          persistentVolumeClaim: 
+            claimName: notification-data-pvc
+---
+# Source: databases/templates/databases.yaml
+# Auth database statefulset
+apiVersion: "apps/v1"
+kind: "StatefulSet"
+metadata: 
+  name: databases-auth-mongo-db
+  namespace: default
+spec:
+  serviceName: auth-mongodb-service 
+  replicas: 1
+  selector: 
+    matchLabels: 
+      app: auth-mongo-db
+  template: 
+    metadata: 
+      labels: 
+        app: auth-mongo-db
+    spec: 
+      serviceAccountName: vault
+      containers: 
+        - name: auth-mongo-db
+          image: mongo
+          imagePullPolicy: "Always"
+          env:            
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-service
+                  key: AUTHDB_PASSWORD
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-service
+                  key: AUTHDB_USER              
+          ports: 
+            - containerPort: 27017
+              name: auth-mongo-db
+          volumeMounts: 
+            - name: auth-mongodb-persistent-storage
+              mountPath: /data/db              
+      volumes: 
+        - name: auth-mongodb-persistent-storage
+          persistentVolumeClaim: 
+            claimName: auth-data-pvc
+---
+# Source: databases/templates/databases.yaml
+# Identity database statefulset set
+apiVersion: "apps/v1"
+kind: "StatefulSet"
+metadata: 
+  name: databases-iden-mongo-db
+  namespace: default
+spec:
+  serviceName: identity-mongodb-service 
+  replicas: 1
+  selector: 
+    matchLabels: 
+      app: iden-mongo-db
+  template: 
+    metadata: 
+      labels: 
+        app: iden-mongo-db
+    spec: 
+      serviceAccountName: vault
+      containers: 
+        - name: identity-mongo-db
+          image: mongo
+          imagePullPolicy: "Always"
+          env:            
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-service
+                  key: IDENTITYDB_PASSWORD
+            - name: MONGO_INITDB_ROOT_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: secrets-service
+                  key: IDENTITYDB_USER             
+          ports: 
+            - containerPort: 27017
+              name: iden-mongo-db
+          volumeMounts: 
+            - name: identity-mongodb-persistent-storage
+              mountPath: /data/db              
+      volumes: 
+        - name: identity-mongodb-persistent-storage
+          persistentVolumeClaim: 
+            claimName: identity-data-pvc
+---
+# Source: databases/templates/service-secret.yaml
+# # PullImageSecret
+#
+# apiVersion: v1
+# kind: Secret
+# metadata:
+#   name: myregistrykey
+# data:
+#   .dockerconfigjson: "ewoJImF1dGhzIjogewoJCSJodHRwczovL2luZGV4LmRvY2tlci5pby92MS8iOiB7fQoJfSwKCSJjcmVkc1N0b3JlIjogImRlc2t0b3AiCn0="
+# type: kubernetes.io/dockerconfigjson
+#
+---
+# Source: databases/templates/service-secret.yaml
+# External Secret
+apiVersion: 'external-secrets.io/v1beta1'
+kind: ExternalSecret
+metadata:
+  name: transfernow-secret
+  namespace: default
+spec:
+  secretStoreRef:
+     name: vault-backend
+     kind: SecretStore
+  target:
+     name: secrets-service
+  data:
+    - secretKey: AUTH_MONGO_URL
+      remoteRef:
+        key: secret/transfernow/services
+        property: authmongourl
+    - secretKey: AUTHDB_PASSWORD
+      remoteRef:
+        key: secret/transfernow/services
+        property: authdbpassword
+    - secretKey: AUTHDB_USER
+      remoteRef:
+        key: secret/transfernow/services
+        property: authdbuser
+    - secretKey: BROKER
+      remoteRef:
+        key: secret/transfernow/services
+        property: broker
+    - secretKey: IDENTITY_MONGO_URL
+      remoteRef:
+        key: secret/transfernow/services
+        property: identitymongourl
+    - secretKey: IDENTITYDB_PASSWORD
+      remoteRef:
+        key: secret/transfernow/services
+        property: identitydbpassword
+    - secretKey: IDENTITYDB_USER
+      remoteRef:
+        key: secret/transfernow/services
+        property: identitydbuser
+    - secretKey: JWT_SECRET
+      remoteRef:
+        key: secret/transfernow/services
+        property: jwtsecret
+    - secretKey: MAILTRAP_AUTH_PASS
+      remoteRef:
+        key: secret/transfernow/services
+        property: mailtrapauthpass
+    - secretKey: MAILTRAP_AUTH_USER
+      remoteRef:
+        key: secret/transfernow/services
+        property: mailtrapauthuser
+    - secretKey: MAILTRAP_HOST
+      remoteRef:
+        key: secret/transfernow/services
+        property: mailtraphost
+    - secretKey: MAILTRAP_PORT
+      remoteRef:
+        key: secret/transfernow/services
+        property: mailtrapport
+    - secretKey: NOTIFICATION_MONGO_URL
+      remoteRef:
+        key: secret/transfernow/services
+        property: notificationmongourl
+    - secretKey: NOTIFICATIONDB_PASSWORD
+      remoteRef:
+        key: secret/transfernow/services
+        property: notificationdbpassword
+    - secretKey: NOTIFICATIONDB_USER
+      remoteRef:
+        key: secret/transfernow/services
+        property: notificationdbuser
+    - secretKey: REDIS_HOST
+      remoteRef:
+        key: secret/transfernow/services
+        property: redishost
+    - secretKey: REDIS_PASSWORD
+      remoteRef:
+        key: secret/transfernow/services
+        property: redispassword
+    - secretKey: REDIS_PORT
+      remoteRef:
+        key: secret/transfernow/services
+        property: redisport
+---
+# Source: databases/templates/service-secret.yaml
+# SecretStore
+apiVersion: external-secrets.io/v1beta1
+kind: SecretStore
+metadata:
+  name: vault-backend
+spec:
+  provider:
+    vault:
+      server: "http://vault:8200"
+      path: "secret"
+      version: "v2"
+      auth:
+        kubernetes:
+          mountPath: "kubernetes"
+          role: "transfernow"
+          serviceAccountRef:
+            name: transfernow
