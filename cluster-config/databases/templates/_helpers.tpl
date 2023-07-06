@@ -2,11 +2,7 @@
 {{- define "service-chart.v0.namespace" -}}
 {{- $ := index . 0 -}}
 {{- $arg := index . 1 -}}
-<<<<<<< HEAD
-namespace: default
-=======
 namespace: {{ $arg.namespace}}
->>>>>>> 958d0dc (feat: added environment to the scope and refactored to allow for this environments)
 {{- end -}}
 
 {{/* Generate label for deployment and service for api-gateway */}}
