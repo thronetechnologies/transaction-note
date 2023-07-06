@@ -5,6 +5,7 @@
 #   name: {{ .namespace | replace " " " -"}}{{ if .development }}-dev{{ end }}
 #   {{- end }}
 # ---
+{{- if eq .Values.services.environment "local" -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -14,18 +15,55 @@ metadata:
 {{ include "service-chart.v0.namespace" (list $ .Values.services) | indent 2 }}
 spec:
   rules:
-    - host: transaction-note.com
+    - host: transfernow.com
       http:
         paths:
-          - path: /
+          - path: /api
             pathType: Prefix
             backend:
               {{- with .Values.services.apigateway.service }}
               service: 
-                name: {{ .name }}
+                name: {{ cat $.Release.Name .name | replace " " "-" }}
                 port: 
                   number: {{ .port }}
               {{- end }}
+    - host: auth.transfernow.com
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              {{- with .Values.services.auth.service }}
+              service: 
+                name: {{ cat $.Release.Name .name | replace " " "-" }}
+                port: 
+                  number: {{ .port }}
+              {{- end }}
+    - host: identity.transfernow.com
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              {{- with .Values.services.identity.service }}
+              service: 
+                name: {{ cat $.Release.Name .name | replace " " "-" }}
+                port: 
+                  number: {{ .port }}
+              {{- end }}
+    - host: notification.transfernow.com
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              {{- with .Values.services.notification.service }}
+              service: 
+                name: {{ cat $.Release.Name .name | replace " " "-" }}
+                port: 
+                  number: {{ .port }}
+              {{- end }}
+{{- end -}}
 ---
 apiVersion: v1
 kind: Service
@@ -33,8 +71,15 @@ metadata:
   {{- with .Values.services.apigateway.service }}
   name: {{ cat $.Release.Name .name | replace " " "-" }}
   {{- end }}
+  {{- if eq .Values.services.environment "dev" }}
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-internal: "true"
+  {{- end }}
 {{ include "service-chart.v0.namespace" (list $ .Values.services) | indent 2 }}
 spec:
+  {{- if eq .Values.services.environment "dev" }}
+  type: LoadBalancer
+  {{- end }}
   selector:
 {{ include "service-chart.v0.selector" .Values.services.apigateway | indent 4}}
   ports:
@@ -51,13 +96,7 @@ metadata:
   name: {{ cat $.Release.Name .Values.services.apigateway.configmap.name | replace " " "-" }}
 {{ include "service-chart.v0.namespace" (list $ .Values.services) | indent 2 }}
 data:
-  # broker: kafka:9092
-  node-env: development
-  # auth-mongo-url: mongodb://root:root@auth-mongodb:27017/
-  # identity-mongo-url: mongodb://root:root@identity-mongodb:27017/
-  # notification-mongo-url: mongodb://root:root@notification-mongodb:27017/
-  # redis-host: redis
-  # mailtrap-host: sandbox.smtp.mailtrap.io
+  node-env: {{ if eq .Values.services.environment "local" }} development {{ else }} production {{ end }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -89,6 +128,7 @@ spec:
         {{- with .Values.services.apigateway.deployment }}
         - name: {{ .containerName }}
           image: {{ $.Values.services.image }}
+          imagePullPolicy: "Always"
           ports:
             - containerPort: {{ .containerPort }}
           command: ["/bin/sh", "-c"]

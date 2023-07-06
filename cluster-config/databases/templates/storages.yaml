@@ -1,27 +1,20 @@
-{{- if .Values.services.development -}}
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: auth-storage
-provisioner: k8s.io/minikube-hostpath
-reclaimPolicy: Retain 
-volumeBindingMode: Immediate
+{{- with .Values.services }}
+{{- if eq .environment "local" -}}
+{{ include "databases.v0.local-storages" .auth.database }}
 ---
 
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: identity-storage
-provisioner: k8s.io/minikube-hostpath
-reclaimPolicy: Retain 
-volumeBindingMode: Immediate
+{{ include "databases.v0.local-storages" .identity.database }}
 ---
 
-apiVersion: storage.k8s.io/v1
-kind: StorageClass
-metadata:
-  name: notification-storage
-provisioner: k8s.io/minikube-hostpath
-reclaimPolicy: Retain 
-volumeBindingMode: Immediate
+{{ include "databases.v0.local-storages" .notification.database }}
 {{- end -}}
+{{- if eq .environment "dev" -}}
+{{ include "databases.v0.dev-storages" .auth.database }}
+---
+
+{{ include "databases.v0.dev-storages" .identity.database }}
+---
+
+{{ include "databases.v0.dev-storages" .notification.database }}
+{{- end -}}
+{{- end }}

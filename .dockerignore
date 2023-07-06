@@ -8,6 +8,8 @@ cluster-config/
 grafana
 dist
 cluster-keys.json
+.env
+*.env
 
 # lock file
 yarn.lock

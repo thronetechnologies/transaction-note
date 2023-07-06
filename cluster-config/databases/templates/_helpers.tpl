@@ -2,7 +2,11 @@
 {{- define "service-chart.v0.namespace" -}}
 {{- $ := index . 0 -}}
 {{- $arg := index . 1 -}}
+<<<<<<< HEAD
 namespace: default
+=======
+namespace: {{ $arg.namespace}}
+>>>>>>> 958d0dc (feat: added environment to the scope and refactored to allow for this environments)
 {{- end -}}
 
 {{/* Generate label for deployment and service for api-gateway */}}
@@ -36,4 +40,54 @@ name: {{ $arg.name }}
       name: {{$.Values.services.externalSecret.secretTarget}}
       key: {{ $val | upper}}
 {{- end }}
+{{- end -}}
+
+{{/* Generate storage template for local env*/}}
+{{- define "databases.v0.local-storages" -}}
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ .storageName }}
+provisioner: k8s.io/minikube-hostpath
+reclaimPolicy: Retain 
+volumeBindingMode: Immediate
+{{- end -}}
+
+{{/* Generate storage template for dev env*/}}
+{{- define "databases.v0.dev-storages" -}}
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: {{ .storageName }}
+provisioner: file.csi.azure.com
+allowVolumeExpansion: true
+mountOptions:
+  - dir_mode=0777
+  - file_mode=0777
+  - uid=0
+  - gid=0
+  - mfsymlinks
+  - cache=strict
+  - actimeo=30
+parameters:
+  skuName: Premium_LRS
+  location: eastus
+{{- end -}}
+
+{{/* Generate persistent volume claim template for local env*/}}
+{{- define "databases.v0.dev-pvc" -}}
+{{- $arg0 := index . 0 -}}
+{{- $arg1 := index . 1 -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ $arg0.pvcName}}
+{{ include "service-chart.v0.namespace" (list $ $arg1) | indent 2 }}
+spec:
+  storageClassName: {{ $arg0.storageName}}
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ if eq $arg1.environment "local" }}1Gi{{ else if eq $arg1.environment "dev" }}{{ $arg0.storage }}{{ end }}
 {{- end -}}

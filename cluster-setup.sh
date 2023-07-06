@@ -66,8 +66,10 @@ is_minikube_running_cmd() {
         echo Yes
         alter_minikube_start_cmd
         ;;
-      "n" | "no" | "No" | " N" )
+      "n" | "no" | "No" | "N" )
         echo No
+        echo "Starting installation of cluster object"
+        install_cluster_object
         ;;
       * )
         echo Unknown response. Type either "Yes/yes/Y/y" or "No/no/N/n"

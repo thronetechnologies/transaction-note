@@ -17,7 +17,7 @@ is_helm_installed() {
 }
 
 install_releases() {
-  cd $cluster_directory
+  cd $GITHUB_WORKSPACE/$cluster_directory
   if [ $? -eq 0 ]
     then
       if [[ " ${overide_arr[@]} " =~ " $1 " ]]
@@ -40,7 +40,6 @@ install_releases() {
           helm install $1 ./$1 --atomic --debug
         fi
       fi
-      sleep 5
   fi
   cd ..
 }
@@ -77,45 +76,16 @@ install_cluster_object() {
     done
       for file in $directory_names
       do
-        if [[ $file == "cluster-override-config" || $file == "databases" ]]
+        if [[ $file == "cluster-override-config" || $file == "kube-prometheus-stack" || $file == "consul" || $file == "vault" || $file == "service-chart" ]]
         then 
           continue
-        fi
-        if [[ " ${overide_arr[@]} " =~ " $file " ]] 
-        then 
-          if [[ $file == "kube-prometheus-stack" ]]
-            then
-              run_install_release_cmd "$file" "monitoring"
-            else
-              run_install_release_cmd "$file"
-          fi
-        else 
-          if [ $file == "service-chart" ] 
-            then 
-              continue
-          fi
+        else
           run_install_release_cmd "$file"
         fi
       done
-    # else
-    #   echo Failed to change directory to $cluster_override_directory
-    # fi
   else
     echo $cluster_override_directory does not exist
   fi
 }
 
-
-if [[ $BASH_SOURCE = $0 ]] 
-then
-  echo $BASH_SOURCE
-  echo $0
-  install_cluster_object 
-else 
-  echo $BASH_SOURCE
-  echo $0
-  echo "Script is being sourced"
-fi
-
-
-# && cd .. && kubectl exec vault-0 -- vault operator init -key-shares=1 -key-threshold=1 -format=json > cluster-keys.json && VAULT_UNSEAL_KEY=$(cat cluster-keys.json | jq -r ".unseal_keys_b64[]") && kubectl exec vault-0 -- vault operator unseal $VAULT_UNSEAL_KEY && kubectl exec vault-1 -- vault operator unseal $VAULT_UNSEAL_KEY && kubectl exec vault-2 -- vault operator unseal $VAULT_UNSEAL_KEY
+install_cluster_object 

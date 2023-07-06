@@ -17,6 +17,10 @@ import configuration from './config/configuration';
     }),
     MongooseModule.forRootAsync({
       useFactory: (config: ConfigService) => {
+        console.log(
+          `${config.get('authMongoUrl')}?authSource=admin`,
+          'line 22'
+        );
         return {
           uri: `${config.get('authMongoUrl')}?authSource=admin`,
         };

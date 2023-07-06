@@ -1,7 +1,10 @@
+# Default values for api-gateway.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
 services:
-  development: true
+  environment: local
   image: neltoby/microservice:v1
-  namespace: transfernow
+  namespace: default
   externalSecret:
     name: transfernow-secret
     backendType: vault
@@ -121,15 +124,3 @@ services:
       replicas: 2
       containerPort: '5005'
       containerName: notification
-
-    # notification vault secrets
-    secrets:
-      - broker
-      - identity_mongo_url
-      - redis_host
-      - redis_password
-      - redis_port
-      - mailtrap_host
-      - mailtrap_port
-      - mailtrap_auth_user
-      - mailtrap_auth_pass

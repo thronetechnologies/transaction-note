@@ -1,0 +1,116 @@
+name: Build and deploy an app to AKS with Helm
+
+on:
+  push:
+    branches: ["development"]
+  workflow_dispatch:
+
+jobs:
+  devbuildImage:
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      # Checks out the repository this file is in
+      - uses: actions/checkout@v3
+
+      # Logs in with your Azure credentials
+      - name: Azure login
+        uses: azure/login@v1.4.6
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # Builds and pushes an image up to your Azure Container Registry
+      - name: Build and push image to ACR
+        run: |
+          az acr build --image $AZURE_CONTAINER_REGISTRY.azurecr.io/$CONTAINER_NAME:${{ github.sha }} --registry $AZURE_CONTAINER_REGISTRY -g $RESOURCE_GROUP .
+
+  devdeploy:
+    environment: dev
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    runs-on: ubuntu-latest
+    needs: [devbuildImage]
+    steps:
+      # Checks out the repository this file is in
+      - uses: actions/checkout@v3
+
+      # Logs in with your Azure credentials
+      - name: Azure login
+        uses: azure/login@v1.4.6
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      # Use kubelogin to configure your kubeconfig for Azure auth
+      - name: Set up kubelogin for non-interactive login
+        uses: azure/use-kubelogin@v1
+        with:
+          kubelogin-version: 'v0.0.25'
+
+      # Retrieves your Azure Kubernetes Service cluster's kubeconfig file
+      - name: Get K8s context
+        uses: azure/aks-set-context@v3
+        with:
+          resource-group: $RESOURCE_GROUP
+          cluster-name: $CLUSTER_NAME
+          admin: 'false'
+          use-kubelogin: 'true'
+
+      # Run bash script to install other dependencies with Azure CLI
+      - name: Azure CLI script file
+        uses: azure/CLI@v1
+        with:
+          azcliversion: 2.30.0
+          inlineScript: |
+            chmod +x $GITHUB_WORKSPACE/install-cloud.sh
+            $GITHUB_WORKSPACE/install-cloud.sh
+
+      # Runs Helm to create manifest files
+      - name: Bake deployment for database
+        uses: azure/k8s-bake@v2
+        with:
+          renderEngine: "helm"
+          helmChart: $DB_CHART_PATH
+          overrides: |
+            services:
+              environment: dev
+              namespace: transfernow
+          helm-version: "latest"
+        id: dbbake
+
+      # Runs Helm to create manifest files
+      - name: Bake deployment for services
+        uses: azure/k8s-bake@v2
+        with:
+          renderEngine: "helm"
+          helmChart: $SERVICE_CHART_PATH
+          overrides: |
+            services:
+              environment: dev
+              namespace: transfernow
+          helm-version: "latest"
+        id: servicebake
+
+      # Deploys application based on manifest files from database step
+      - name: Deploy application
+        uses: Azure/k8s-deploy@v4
+        with:
+          action: deploy
+          manifests: ${{ steps.dbbake.outputs.manifestsBundle }}
+
+      # Deploys application based on manifest files from service step
+      - name: Deploy application
+        uses: Azure/k8s-deploy@v4
+        with:
+          action: deploy
+          manifests: ${{ steps.servicebake.outputs.manifestsBundle }}
+          images: |
+            $AZURE_CONTAINER_REGISTRY.azurecr.io/$CONTAINER_NAME:${{ github.sha }}

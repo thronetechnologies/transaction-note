@@ -1,42 +1,9 @@
-{{- if .Values.services.development -}}
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: auth-data-pvc
-{{ include "service-chart.v0.namespace" (list $ .Values.services) | indent 2 }}
-spec:
-  storageClassName: auth-storage
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
+{{- with .Values.services }}
+{{ include "databases.v0.dev-pvc" (list .auth.database .) }}
 ---
 
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: identity-data-pvc
-{{ include "service-chart.v0.namespace" (list $ .Values.services) | indent 2 }}
-spec:
-  storageClassName: identity-storage
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
+{{ include "databases.v0.dev-pvc" (list .identity.database .) }}
 ---
 
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: notification-data-pvc
-{{ include "service-chart.v0.namespace" (list $ .Values.services) | indent 2 }}
-spec:
-  storageClassName: notification-storage
-  accessModes:
-  - ReadWriteOnce
-  resources:
-    requests:
-      storage: 1Gi
-{{- end -}}
+{{ include "databases.v0.dev-pvc" (list .notification.database .) }}
+{{- end }}

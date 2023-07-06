@@ -104,10 +104,11 @@ spec:
       containers:
         - name: api-gateway
           image: neltoby/microservice:v1
+          imagePullPolicy: "Always"
           ports:
             - containerPort: 5000
-          command: ['/bin/sh', '-c']
-          args: ['npx nx run api-gateway-service:serve']
+          command: ["/bin/sh", "-c"]
+          args: ["npx nx run api-gateway-service:serve"]
           env:
             - name: PORT
               value: '5000'
@@ -115,7 +116,7 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: transfernow-transfernowconfigmap
-                  key: node-env
+                  key: node-env            
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
@@ -160,10 +161,11 @@ spec:
       containers:
         - name: auth
           image: neltoby/microservice:v1
+          imagePullPolicy: "Always"
           ports:
             - containerPort: 5004
-          command: ['/bin/sh', '-c']
-          args: ['npx nx run auth-service:serve']
+          command: ["/bin/sh", "-c"]
+          args: ["npx nx run auth-service:serve"]
           env:
             - name: PORT
               value: '5004'
@@ -171,7 +173,7 @@ spec:
               valueFrom:
                 configMapKeyRef:
                   name: transfernow-transfernowconfigmap
-                  key: node-env
+                  key: node-env            
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
@@ -221,16 +223,17 @@ spec:
       containers:
         - name: identity
           image: neltoby/microservice:v1
+          imagePullPolicy: "Always"
           ports:
             - containerPort: 5002
-          command: ['/bin/sh', '-c']
-          args: ['npx nx run identity-service:serve']
+          command: ["/bin/sh", "-c"]
+          args: ["npx nx run identity-service:serve"]
           env:
             - name: NODE_ENV
               valueFrom:
                 configMapKeyRef:
                   name: transfernow-transfernowconfigmap
-                  key: node-env
+                  key: node-env            
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
@@ -295,26 +298,27 @@ spec:
       containers:
         - name: notification
           image: neltoby/microservice:v1
+          imagePullPolicy: "Always"
           ports:
             - containerPort: 5005
-          command: ['/bin/sh', '-c']
-          args: ['npx nx run notification-service:serve']
+          command: ["/bin/sh", "-c"]
+          args: ["npx nx run notification-service:serve"]
           env:
             - name: NODE_ENV
               valueFrom:
                 configMapKeyRef:
                   name: transfernow-transfernowconfigmap
-                  key: node-env
+                  key: node-env            
             - name: BROKER
               valueFrom:
                 secretKeyRef:
                   name: secrets-service
                   key: BROKER
-            - name: IDENTITY_MONGO_URL
+            - name: NOTIFICATION_MONGO_URL
               valueFrom:
                 secretKeyRef:
                   name: secrets-service
-                  key: IDENTITY_MONGO_URL
+                  key: NOTIFICATION_MONGO_URL
             - name: REDIS_HOST
               valueFrom:
                 secretKeyRef:
@@ -366,13 +370,43 @@ metadata:
   namespace: default
 spec:
   rules:
-    - host: transaction-note.com
+    - host: transfernow.com
       http:
         paths:
-          - path: /
+          - path: /api
             pathType: Prefix
             backend:
-              service:
-                name: api-gateway-service
-                port:
+              service: 
+                name: transfernow-api-gateway-service
+                port: 
                   number: 5000
+    - host: auth.transfernow.com
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service: 
+                name: transfernow-auth-service
+                port: 
+                  number: 5004
+    - host: identity.transfernow.com
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service: 
+                name: transfernow-identity-service
+                port: 
+                  number: 5002
+    - host: notification.transfernow.com
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service: 
+                name: transfernow-notification-service
+                port: 
+                  number: 5005

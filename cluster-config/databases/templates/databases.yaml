@@ -1,4 +1,4 @@
-{{- if .Values.services.development -}}
+{{- if or (eq .Values.services.environment "local") (eq .Values.services.environment "dev") -}}
 # Notification database headless service
 {{- with .Values.services.notification.database }}
 apiVersion: "v1"

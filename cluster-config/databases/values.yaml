@@ -1,6 +1,7 @@
 services:
-  development: true
-  namespace: transfernow
+  # Set devlopment
+  environment: local
+  namespace: default
   externalSecret:
     name: transfernow-secret
     backendType: vault
@@ -41,6 +42,9 @@ services:
       volumeMountName: auth-mongodb-persistent-storage
       volumeMountPath: /data/db
       volumeClaimName: auth-data-pvc
+      storageName: auth-storage
+      storage: 100Gi
+      pvcName: auth-data-pvc
       service:
         name: auth-mongodb-service
         clusterIP: None
@@ -61,6 +65,9 @@ services:
       volumeMountName: identity-mongodb-persistent-storage
       volumeMountPath: /data/db
       volumeClaimName: identity-data-pvc
+      storageName: identity-storage
+      storage: 100Gi
+      pvcName: identity-data-pvc
       service:
         name: identity-mongodb-service
         clusterIP: None
@@ -81,6 +88,9 @@ services:
       volumeMountName: notification-mongodb-persistent-storage
       volumeMountPath: /data/db
       volumeClaimName: notification-data-pvc
+      storageName: notification-storage
+      storage: 100Gi
+      pvcName: notification-data-pvc
       service:
         name: notification-mongodb-service
         clusterIP: None

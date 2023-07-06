@@ -45,6 +45,7 @@ spec:
         {{- with .Values.services.auth.deployment }}
         - name: {{ .containerName }}
           image: {{ $.Values.services.image }}
+          imagePullPolicy: "Always"
           ports:
             - containerPort: {{ .containerPort }}
           command: ["/bin/sh", "-c"]
