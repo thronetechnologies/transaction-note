@@ -2,7 +2,7 @@
 {{- define "service-chart.v0.namespace" -}}
 {{- $ := index . 0 -}}
 {{- $arg := index . 1 -}}
-namespace: default
+namespace: {{ $arg.namespace}}
 {{- end -}}
 
 {{/* Generate label for deployment and service for api-gateway */}}

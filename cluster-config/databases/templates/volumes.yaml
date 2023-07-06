@@ -1,4 +1,4 @@
-{{- if .Values.services.development -}}
+{{- if eq .Values.services.environment "local" -}}
 apiVersion: v1
 kind: PersistentVolume
 metadata:
