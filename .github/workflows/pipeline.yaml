@@ -16,6 +16,13 @@ jobs:
       # Checks out the repository this file is in
       - uses: actions/checkout@v3
 
+      # Confirm the secrets
+      - name: Confirm the environment variable
+        run: |
+          echo ${{ secrets.AZURE_CLIENT_ID }} is Client_id
+          echo ${{ secrets.AZURE_TENANT_ID }} is Tenant_id
+          echo ${{ secrets.AZURE_SUBSCRIPTION_ID }} is Subscription_id
+
       # Logs in with your Azure credentials
       - name: Azure login
         uses: azure/login@v1.4.6
