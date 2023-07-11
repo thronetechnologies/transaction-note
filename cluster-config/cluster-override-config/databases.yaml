@@ -1,0 +1,3 @@
+services:
+  environment: dev
+  namespace: transfernow

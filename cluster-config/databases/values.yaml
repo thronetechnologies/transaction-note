@@ -1,5 +1,4 @@
 services:
-  # Set devlopment
   environment: local
   namespace: default
   externalSecret:
