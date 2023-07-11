@@ -121,6 +121,8 @@ jobs:
             --atomic 
             --namespace
             transfernow
+            --name-template
+            redis
           helm-version: "latest"
           overrideFiles: ./cluster-config/cluster-override-config/redis.yaml
         id: redisbake
@@ -152,6 +154,8 @@ jobs:
             --atomic 
             --namespace
             transfernow
+            --name-template
+            transfernow
           overrideFiles: ./cluster-config/cluster-override-config/databases.yaml
           helm-version: "latest"
         id: dbbake
@@ -167,6 +171,8 @@ jobs:
             --atomic 
             --namespace
             transfernow
+            --name-template
+            tarnsfernow
           overrideFiles: ./cluster-config/cluster-override-config/service-chart.yaml
           helm-version: "latest"
         id: servicebake
