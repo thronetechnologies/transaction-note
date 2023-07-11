@@ -131,10 +131,7 @@ jobs:
             --atomic 
             --namespace
             transfernow
-          overrides: |
-            services:
-              environment: dev
-              namespace: transfernow
+          overrideFiles: ./cluster-config/cluster-override-config/databases.yaml
           helm-version: "latest"
         id: dbbake
 
