@@ -154,6 +154,7 @@ jobs:
       - name: Deploy zookeeper
         uses: Azure/k8s-deploy@v4
         with:
+          namespace: transfernow
           action: deploy
           manifests: ${{ steps.zookeeperbake.outputs.manifestsBundle }}
 
@@ -161,6 +162,7 @@ jobs:
       - name: Deploy kafka
         uses: Azure/k8s-deploy@v4
         with:
+          namespace: transfernow
           action: deploy
           manifests: ${{ steps.kafkabake.outputs.manifestsBundle }}
 
@@ -168,6 +170,7 @@ jobs:
       - name: Deploy redis
         uses: Azure/k8s-deploy@v4
         with:
+          namespace: transfernow
           action: deploy
           manifests: ${{ steps.redisbake.outputs.manifestsBundle }}
 
@@ -175,6 +178,7 @@ jobs:
       - name: Deploy databases
         uses: Azure/k8s-deploy@v4
         with:
+          namespace: transfernow
           action: deploy
           manifests: ${{ steps.dbbake.outputs.manifestsBundle }}
 
@@ -182,6 +186,7 @@ jobs:
       - name: Deploy application
         uses: Azure/k8s-deploy@v4
         with:
+          namespace: transfernow
           action: deploy
           manifests: ${{ steps.servicebake.outputs.manifestsBundle }}
           images: |
