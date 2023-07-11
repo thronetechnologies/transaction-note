@@ -19,9 +19,9 @@ jobs:
       # Confirm the secrets
       - name: Confirm the environment variable
         run: |
-          echo $AZURE_CONTAINER_REGISTRY is Container registry name
-          echo $CONTAINER_NAME is Container name
-          echo $RESOURCE_GROUP is Resource group name
+          echo ${{ env.AZURE_CONTAINER_REGISTRY }} is Container registry name
+          echo ${{ env.CONTAINER_NAME }} is Container name
+          echo ${{ env. RESOURCE_GROUP }} is Resource group name
 
       # Logs in with your Azure credentials
       - name: Azure login
