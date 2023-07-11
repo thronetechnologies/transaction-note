@@ -19,9 +19,9 @@ jobs:
       # Confirm the secrets
       - name: Confirm the environment variable
         run: |
-          echo ${{ secrets.AZURE_CLIENT_ID }} is Client_id
-          echo ${{ secrets.AZURE_TENANT_ID }} is Tenant_id
-          echo ${{ secrets.AZURE_SUBSCRIPTION_ID }} is Subscription_id
+          echo $AZURE_CONTAINER_REGISTRY is Container registry name
+          echo $CONTAINER_NAME is Container name
+          echo $RESOURCE_GROUP is Resource group name
 
       # Logs in with your Azure credentials
       - name: Azure login
