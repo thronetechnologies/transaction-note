@@ -141,10 +141,12 @@ jobs:
         with:
           renderEngine: "helm"
           helmChart: ${{ env.SERVICE_CHART_PATH }}
-          overrides: |
-            services:
-              environment: dev
-              namespace: transfernow
+          arguments: |
+            --debug
+            --atomic 
+            --namespace
+            transfernow
+          overrideFiles: ./cluster-config/cluster-override-config/service-chart.yaml
           helm-version: "latest"
         id: servicebake
 
