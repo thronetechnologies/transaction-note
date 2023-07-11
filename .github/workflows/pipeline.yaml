@@ -7,6 +7,9 @@ env:
   CLUSTER_NAME: transfernow-cluster           # set this to the name of your AKS cluster
   
   # If you bake using helm:
+  ZOOKEEPER_CHART_PATH: ./cluster-config/zookeeper
+  KAFKA_CHART_PATH: ./cluster-config/kafka
+  REDIS_CHART_PATH: ./cluster-config/redis
   DB_CHART_PATH: ./cluster-config/databases                 # set this to the path to your helm file
   SERVICE_CHART_PATH: ./cluster-config/service-chart
 
@@ -25,13 +28,6 @@ jobs:
     steps:
       # Checks out the repository this file is in
       - uses: actions/checkout@v3
-
-      # Confirm the secrets
-      - name: Confirm the environment variable
-        run: |
-          echo ${{ env.AZURE_CONTAINER_REGISTRY }} is Container registry name
-          echo ${{ env.CONTAINER_NAME }} is Container name
-          echo ${{ env. RESOURCE_GROUP }} is Resource group name
 
       # Logs in with your Azure credentials
       - name: Azure login
@@ -81,16 +77,48 @@ jobs:
           admin: 'false'
           use-kubelogin: 'true'
 
-      # Run bash script to install other dependencies with Azure CLI
-      - name: Azure CLI script file
-        uses: azure/CLI@v1
+      # Runs Helm to create manifest files
+      - name: Bake deployment for zookeeper
+        uses: azure/k8s-bake@v2
         with:
-          azcliversion: 2.30.0
-          inlineScript: |
-            az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-            az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.CLUSTER_NAME }}
-            chmod +x $GITHUB_WORKSPACE/install-cloud.sh
-            $GITHUB_WORKSPACE/install-cloud.sh
+          renderEngine: "helm"
+          helmChart: ${{ env.ZOOKEEPER_CHART_PATH }}
+          arguments: |
+            --debug
+            --atomic 
+            --namespace
+            transfernow
+          helm-version: "latest"
+        id: zookeeperbake
+
+      # Runs Helm to create manifest files
+      - name: Bake deployment for kafka
+        uses: azure/k8s-bake@v2
+        with:
+          renderEngine: "helm"
+          helmChart: ${{ env.KAFKA_CHART_PATH }}
+          arguments: |
+            --debug
+            --atomic 
+            --namespace
+            transfernow
+          helm-version: "latest"
+        id: kafkabake
+
+      # Runs Helm to create manifest files
+      - name: Bake deployment for redis
+        uses: azure/k8s-bake@v2
+        with:
+          renderEngine: "helm"
+          helmChart: ${{ env.REDIS_CHART_PATH }}
+          arguments: |
+            --debug
+            --atomic 
+            --namespace
+            transfernow
+          helm-version: "latest"
+          overrideFiles: ./cluster-config/cluster-override-config/redis.yaml
+        id: redisbake
 
       # Runs Helm to create manifest files
       - name: Bake deployment for database
@@ -98,6 +126,11 @@ jobs:
         with:
           renderEngine: "helm"
           helmChart: ${{ env.DB_CHART_PATH }}
+          arguments: |
+            --debug
+            --atomic 
+            --namespace
+            transfernow
           overrides: |
             services:
               environment: dev
@@ -118,8 +151,29 @@ jobs:
           helm-version: "latest"
         id: servicebake
 
+      # Deploys application based on manifest files from zookeeper step
+      - name: Deploy zookeeper
+        uses: Azure/k8s-deploy@v4
+        with:
+          action: deploy
+          manifests: ${{ steps.zookeeperbake.outputs.manifestsBundle }}
+
+      # Deploys application based on manifest files from kafka step
+      - name: Deploy kafka
+        uses: Azure/k8s-deploy@v4
+        with:
+          action: deploy
+          manifests: ${{ steps.kafkabake.outputs.manifestsBundle }}
+
+      # Deploys application based on manifest files from redis step
+      - name: Deploy redis
+        uses: Azure/k8s-deploy@v4
+        with:
+          action: deploy
+          manifests: ${{ steps.redisbake.outputs.manifestsBundle }}
+
       # Deploys application based on manifest files from database step
-      - name: Deploy application
+      - name: Deploy databases
         uses: Azure/k8s-deploy@v4
         with:
           action: deploy
