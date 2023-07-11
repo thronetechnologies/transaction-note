@@ -76,8 +76,8 @@ jobs:
       - name: Get K8s context
         uses: azure/aks-set-context@v3
         with:
-          resource-group: $RESOURCE_GROUP
-          cluster-name: $CLUSTER_NAME
+          resource-group: ${{ env.RESOURCE_GROUP }}
+          cluster-name: ${{ env.CLUSTER_NAME }}
           admin: 'false'
           use-kubelogin: 'true'
 
@@ -95,7 +95,7 @@ jobs:
         uses: azure/k8s-bake@v2
         with:
           renderEngine: "helm"
-          helmChart: $DB_CHART_PATH
+          helmChart: ${{ env.DB_CHART_PATH }}
           overrides: |
             services:
               environment: dev
@@ -108,7 +108,7 @@ jobs:
         uses: azure/k8s-bake@v2
         with:
           renderEngine: "helm"
-          helmChart: $SERVICE_CHART_PATH
+          helmChart: ${{ env.SERVICE_CHART_PATH }}
           overrides: |
             services:
               environment: dev
@@ -130,4 +130,4 @@ jobs:
           action: deploy
           manifests: ${{ steps.servicebake.outputs.manifestsBundle }}
           images: |
-            $AZURE_CONTAINER_REGISTRY.azurecr.io/$CONTAINER_NAME:${{ github.sha }}
+            ${{ env.AZURE_CONTAINER_REGISTRY }}/${{ env.CONTAINER_NAME }}:${{ github.sha }}
