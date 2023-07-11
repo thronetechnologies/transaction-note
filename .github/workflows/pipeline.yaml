@@ -10,6 +10,7 @@ env:
   ZOOKEEPER_CHART_PATH: ./cluster-config/zookeeper
   KAFKA_CHART_PATH: ./cluster-config/kafka
   REDIS_CHART_PATH: ./cluster-config/redis
+  EXTERNAL_SECRET_CHART_PATH: ./cluster-config/external-secrets
   DB_CHART_PATH: ./cluster-config/databases                 # set this to the path to your helm file
   SERVICE_CHART_PATH: ./cluster-config/service-chart
 
@@ -88,6 +89,8 @@ jobs:
             --atomic 
             --namespace
             transfernow
+            --name-template
+            zookeeper
           helm-version: "latest"
         id: zookeeperbake
 
@@ -102,6 +105,8 @@ jobs:
             --atomic 
             --namespace
             transfernow
+            --name-template
+            kafka
           helm-version: "latest"
         id: kafkabake
 
@@ -119,6 +124,22 @@ jobs:
           helm-version: "latest"
           overrideFiles: ./cluster-config/cluster-override-config/redis.yaml
         id: redisbake
+
+      # Runs Helm to create manifest files
+      - name: Bake deployment for external secrets
+        uses: azure/k8s-bake@v2
+        with:
+          renderEngine: "helm"
+          helmChart: ${{ env.EXTERNAL_SECRET_CHART_PATH }}
+          arguments: |
+            --debug
+            --atomic 
+            --namespace
+            transfernow
+            --name-template
+            external-secrets
+          helm-version: "latest"
+        id: externalsecretsbake
 
       # Runs Helm to create manifest files
       - name: Bake deployment for database
@@ -173,6 +194,13 @@ jobs:
           namespace: transfernow
           action: deploy
           manifests: ${{ steps.redisbake.outputs.manifestsBundle }}
+
+      - name: Deploy external secrets
+        uses: Azure/k8s-deploy@v4
+        with:
+          namespace: transfernow
+          action: deploy
+          manifests: ${{ steps.externalsecretsbake.outputs.manifestsBundle }}
 
       # Deploys application based on manifest files from database step
       - name: Deploy databases
