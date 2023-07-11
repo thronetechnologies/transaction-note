@@ -87,6 +87,8 @@ jobs:
         with:
           azcliversion: 2.30.0
           inlineScript: |
+            az account set --subscription ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+            az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP }} -name ${{ env.CLUSTER_NAME }}
             chmod +x $GITHUB_WORKSPACE/install-cloud.sh
             $GITHUB_WORKSPACE/install-cloud.sh
 
