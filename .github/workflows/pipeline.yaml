@@ -1,14 +1,14 @@
 name: Build and deploy an app to AKS with Helm
 
 env:
-  AZURE_CONTAINER_REGISTRY: $AZURE_CONTAINER_REGISTRY # set this to the name of your container registry            # set this to your project's name
-  RESOURCE_GROUP: $RESOURCE_GROUP          # set this to the resource group containing your AKS cluster
-  CONTAINER_NAME: $CONTAINER_NAME 
-  CLUSTER_NAME: $CLUSTER_NAME             # set this to the name of your AKS cluster
+  AZURE_CONTAINER_REGISTRY: transfernowregistry.azurecr.io   # set this to the name of your container registry 
+  RESOURCE_GROUP: transfernow         # set this to the resource group containing your AKS cluster
+  CONTAINER_NAME: microservice
+  CLUSTER_NAME: transfernow-cluster           # set this to the name of your AKS cluster
   
   # If you bake using helm:
-  DB_CHART_PATH: $DB_CHART_PATH                  # set this to the path to your helm file
-  SERVICE_CHART_PATH: $SERVICE_CHART_PATH
+  DB_CHART_PATH: ./cluster-config/databases                 # set this to the path to your helm file
+  SERVICE_CHART_PATH: ./cluster-config/service-chart
 
 on:
   push:
