@@ -5,9 +5,9 @@ directory_names=`ls ./$cluster_directory`
 overide_arr=()
 
 is_helm_installed() {
-  check_status=$(helm version --short)
+  check_status=$(helm version --short | grep "v")
   echo $check_status
-  if [ $? -eq 0 ]
+  if [ $? -eq 0 ] && [[ $check_status == *"v"*  || $check_status == *"v3"* ]]
     then
       echo Helm is installed
   else
