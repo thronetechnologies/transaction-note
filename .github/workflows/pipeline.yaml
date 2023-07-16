@@ -172,7 +172,7 @@ jobs:
             --namespace
             transfernow
             --name-template
-            tarnsfernow
+            transfernow
           overrideFiles: ./cluster-config/cluster-override-config/service-chart.yaml
           helm-version: "latest"
         id: servicebake
