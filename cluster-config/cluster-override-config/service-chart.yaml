@@ -2,4 +2,4 @@ services:
   environment: dev
   namespace: transfernow
   image: |
-    "${{ env.AZURE_CONTAINER_REGISTRY }}/${{ env.CONTAINER_NAME }}:${{ github.sha }}"
+    "$AZURE_CONTAINER_REGISTRY/$CONTAINER_NAME:$GITHUB_SHA"
