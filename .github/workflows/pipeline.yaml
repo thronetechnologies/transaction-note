@@ -175,8 +175,7 @@ jobs:
             transfernow
           overrideFiles: ./cluster-config/cluster-override-config/service-chart.yaml
           overrides: |
-            services:
-              image: ${{ env.AZURE_CONTAINER_REGISTRY }}/${{ env.CONTAINER_NAME }}:${{ github.sha }}
+            services.image: ${{ env.AZURE_CONTAINER_REGISTRY }}/${{ env.CONTAINER_NAME }}:${{ github.sha }}
           helm-version: "latest"
         id: servicebake
 
