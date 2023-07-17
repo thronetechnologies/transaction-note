@@ -23,20 +23,23 @@ import { NotificationQueueModule } from './notification-queue/notification-queue
     MongooseModule.forRootAsync({
       useFactory: (config: ConfigService) => {
         console.log(
-          `${config.get('notificationMongoUrl')}?directConnection=true`,
+          `${config.get(
+            'notificationMongoUrl'
+          )}?authSource=admin&directConnection=true`,
           'line 25'
         );
         console.log(`${config.get('redisHost')}`, 'line 26');
         return {
-          uri: `${config.get('notificationMongoUrl')}?directConnection=true;
-`,
+          uri: `${config.get(
+            'notificationMongoUrl'
+          )}?authSource=admin&directConnection=true`,
         };
       },
       inject: [ConfigService],
     }),
     BullModule.forRootAsync({
       useFactory: (config: ConfigService) => {
-        console.log(process.env.BROKER, 'line 38')
+        console.log(process.env.BROKER, 'line 38');
         return {
           redis: {
             host: config.get('redisHost'),
