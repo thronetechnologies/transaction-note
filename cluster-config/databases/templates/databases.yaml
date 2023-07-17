@@ -40,8 +40,10 @@ spec:
           image: {{ .image }}
           imagePullPolicy: "Always"
           command: ["/bin/sh"]
-          args: ["-c", "mongod --replSet=rs0 --bind_ip_all"]
+          args: ["-c", "mongod --replSet=rs0 --auth --bind_ip_all"]
           env: 
+            - name: MONGO_INITDB_DATABASE
+              value: notifdb
 {{- include "service-chart.v0.ext-secrets-merge" (list $ .) | indent 12 }}           
           ports: 
             - containerPort: {{ .containerPort }}
@@ -96,8 +98,10 @@ spec:
           image: {{ .image }}
           imagePullPolicy: "Always"
           command: ["/bin/sh"]
-          args: ["-c", "mongod --replSet=rs0 --bind_ip_all"]
+          args: ["-c", "mongod --replSet=rs0 --auth --bind_ip_all"]
           env:
+            - name: MONGO_INITDB_DATABASE
+                value: authdb
 {{- include "service-chart.v0.ext-secrets-merge" (list $ .) | indent 12 }}              
           ports: 
             - containerPort: {{ .containerPort }}
@@ -152,8 +156,10 @@ spec:
           image: {{ .image }}
           imagePullPolicy: "Always"
           command: ["/bin/sh"]
-          args: ["-c", "mongod --replSet=rs0 --bind_ip_all"]
+          args: ["-c", "mongod --replSet=rs0 --auth --bind_ip_all"]
           env: 
+            - name: MONGO_INITDB_DATABASE
+              value: idendb
 {{- include "service-chart.v0.ext-secrets-merge" (list $ .) | indent 12 }}             
           ports: 
             - containerPort: {{ .containerPort }}
