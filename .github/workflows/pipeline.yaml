@@ -179,6 +179,14 @@ jobs:
           helm-version: "latest"
         id: servicebake
 
+      # Deploys application based on manifest files from database step
+      - name: Deploy databases
+        uses: Azure/k8s-deploy@v4
+        with:
+          namespace: transfernow
+          action: deploy
+          manifests: ${{ steps.dbbake.outputs.manifestsBundle }}
+
       # Deploys application based on manifest files from zookeeper step
       - name: Deploy zookeeper
         uses: Azure/k8s-deploy@v4
@@ -209,14 +217,6 @@ jobs:
           namespace: transfernow
           action: deploy
           manifests: ${{ steps.externalsecretsbake.outputs.manifestsBundle }}
-
-      # Deploys application based on manifest files from database step
-      - name: Deploy databases
-        uses: Azure/k8s-deploy@v4
-        with:
-          namespace: transfernow
-          action: deploy
-          manifests: ${{ steps.dbbake.outputs.manifestsBundle }}
 
       # Deploys application based on manifest files from service step
       - name: Deploy application
