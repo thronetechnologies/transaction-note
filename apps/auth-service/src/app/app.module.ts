@@ -21,6 +21,7 @@ import configuration from './config/configuration';
           `${config.get('authMongoUrl')}?authSource=admin`,
           'line 22'
         );
+        console.log(`${config.get('jwtSecret')}`, 'line 24');
         return {
           uri: `${config.get('authMongoUrl')}?authSource=admin`,
         };

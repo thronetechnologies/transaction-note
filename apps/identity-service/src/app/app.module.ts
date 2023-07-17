@@ -28,6 +28,8 @@ import configuration from './config/configuration';
           `${config.get('identityMongoUrl')}?authSource=admin`,
           'line 27'
         );
+        console.log(`${config.get('jwtSecret')}`, 'line 31');
+
         return {
           uri: `${config.get('identityMongoUrl')}?authSource=admin`,
         };
