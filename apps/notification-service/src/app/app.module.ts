@@ -22,7 +22,11 @@ import { NotificationQueueModule } from './notification-queue/notification-queue
     }),
     MongooseModule.forRootAsync({
       useFactory: (config: ConfigService) => {
-        console.log(`${config.get('notificationMongoUrl')}?authSource=admin`, 'line 25')
+        console.log(
+          `${config.get('notificationMongoUrl')}?authSource=admin`,
+          'line 25'
+        );
+        console.log(`${config.get('redisHost')}`, 'line 26');
         return {
           uri: `${config.get('notificationMongoUrl')}?authSource=admin`,
         };
