@@ -39,7 +39,7 @@ services:
       containerPort: '27017'
       image: mongo:latest
       volumeMountName: auth-mongodb-storage
-      volumeMountPath: /data/db
+      volumeMountPath: /var/logs
       volumeClaimName: auth-data-pvc
       storageName: auth-storage
       storage: 100Gi
@@ -62,7 +62,7 @@ services:
       containerPort: '27017'
       image: mongo:latest
       volumeMountName: iden-mongodb-storage
-      volumeMountPath: /data/db
+      volumeMountPath: /var/logs
       volumeClaimName: identity-data-pvc
       storageName: identity-storage
       storage: 100Gi
@@ -85,7 +85,7 @@ services:
       containerPort: '27017'
       image: mongo:latest
       volumeMountName: noti-mongodb-storage
-      volumeMountPath: /data/db
+      volumeMountPath: /var/logs
       volumeClaimName: notification-data-pvc
       storageName: notification-storage
       storage: 100Gi
