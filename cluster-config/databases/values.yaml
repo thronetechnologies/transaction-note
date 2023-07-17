@@ -37,7 +37,7 @@ services:
       replicas: 1
       containerName: auth-mongo-db
       containerPort: '27017'
-      image: mongo
+      image: mongo:latest
       volumeMountName: auth-mongodb-persistent-storage
       volumeMountPath: /data/db
       volumeClaimName: auth-data-pvc
@@ -60,7 +60,7 @@ services:
       replicas: 1
       containerName: identity-mongo-db
       containerPort: '27017'
-      image: mongo
+      image: mongo:latest
       volumeMountName: identity-mongodb-persistent-storage
       volumeMountPath: /data/db
       volumeClaimName: identity-data-pvc
@@ -83,7 +83,7 @@ services:
       replicas: 1
       containerName: notification-mongo-db
       containerPort: '27017'
-      image: mongo
+      image: mongo:latest
       volumeMountName: notification-mongodb-persistent-storage
       volumeMountPath: /data/db
       volumeClaimName: notification-data-pvc

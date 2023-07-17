@@ -124,3 +124,15 @@ services:
       replicas: 2
       containerPort: '5005'
       containerName: notification
+
+    # notification vault secrets
+    secrets:
+      - broker
+      - notification_mongo_url
+      - redis_port
+      - redis_host
+      - redis_password
+      - mailtrap_host
+      - mailtrap_port
+      - mailtrap_auth_user
+      - mailtrap_auth_pass
