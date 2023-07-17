@@ -35,6 +35,7 @@ import { NotificationQueueModule } from './notification-queue/notification-queue
     }),
     BullModule.forRootAsync({
       useFactory: (config: ConfigService) => {
+        console.log(process.env.BROKER, 'line 38')
         return {
           redis: {
             host: config.get('redisHost'),
