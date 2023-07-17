@@ -34,11 +34,11 @@ services:
     # auth database statefulset helm values
     database:
       name: auth-mongo-db
-      replicas: 1
+      replicas: 3
       containerName: auth-mongo-db
       containerPort: '27017'
       image: mongo:latest
-      volumeMountName: auth-mongodb-persistent-storage
+      volumeMountName: auth-mongodb-storage
       volumeMountPath: /data/db
       volumeClaimName: auth-data-pvc
       storageName: auth-storage
@@ -57,11 +57,11 @@ services:
     # identity database statefulset helm values
     database:
       name: iden-mongo-db
-      replicas: 1
+      replicas: 3
       containerName: identity-mongo-db
       containerPort: '27017'
       image: mongo:latest
-      volumeMountName: identity-mongodb-persistent-storage
+      volumeMountName: iden-mongodb-storage
       volumeMountPath: /data/db
       volumeClaimName: identity-data-pvc
       storageName: identity-storage
@@ -80,11 +80,11 @@ services:
     # notification database statefulset helm values
     database:
       name: notif-mongo-db
-      replicas: 1
+      replicas: 3
       containerName: notification-mongo-db
       containerPort: '27017'
       image: mongo:latest
-      volumeMountName: notification-mongodb-persistent-storage
+      volumeMountName: noti-mongodb-storage
       volumeMountPath: /data/db
       volumeClaimName: notification-data-pvc
       storageName: notification-storage
