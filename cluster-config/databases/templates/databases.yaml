@@ -101,7 +101,7 @@ spec:
           args: ["-c", "mongod --replSet=rs0 --auth --bind_ip_all"]
           env:
             - name: MONGO_INITDB_DATABASE
-                value: authdb
+              value: authdb
 {{- include "service-chart.v0.ext-secrets-merge" (list $ .) | indent 12 }}              
           ports: 
             - containerPort: {{ .containerPort }}
