@@ -18,12 +18,12 @@ import configuration from './config/configuration';
     MongooseModule.forRootAsync({
       useFactory: (config: ConfigService) => {
         console.log(
-          `${config.get('authMongoUrl')}?authSource=admin`,
+          `${config.get('authMongoUrl')}?directConnection=true`,
           'line 22'
         );
         console.log(`${config.get('jwtSecret')}`, 'line 24');
         return {
-          uri: `${config.get('authMongoUrl')}?authSource=admin`,
+          uri: `${config.get('authMongoUrl')}?directConnection=true`,
         };
       },
       inject: [ConfigService],
