@@ -39,6 +39,8 @@ spec:
         - name: {{ .containerName }}
           image: {{ .image }}
           imagePullPolicy: "Always"
+          command: ["/bin/sh"]
+          args: ["-c", "mongod --replSet=rs0 --bind_ip_all"]
           env: 
 {{- include "service-chart.v0.ext-secrets-merge" (list $ .) | indent 12 }}           
           ports: 
@@ -93,6 +95,8 @@ spec:
         - name: {{ .containerName }}
           image: {{ .image }}
           imagePullPolicy: "Always"
+          command: ["/bin/sh"]
+          args: ["-c", "mongod --replSet=rs0 --bind_ip_all"]
           env:
 {{- include "service-chart.v0.ext-secrets-merge" (list $ .) | indent 12 }}              
           ports: 
@@ -147,6 +151,8 @@ spec:
         - name: {{ .containerName }}
           image: {{ .image }}
           imagePullPolicy: "Always"
+          command: ["/bin/sh"]
+          args: ["-c", "mongod --replSet=rs0 --bind_ip_all"]
           env: 
 {{- include "service-chart.v0.ext-secrets-merge" (list $ .) | indent 12 }}             
           ports: 
